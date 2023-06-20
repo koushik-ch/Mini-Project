@@ -1,0 +1,24 @@
+{
+  "name": "mini-project",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "amqplib": "^0.10.3",
+    "hapi": "^18.1.0",
+    "hapi-cors": "^1.0.3",
+    "ioredis": "^5.3.2",
+    "joi": "^17.9.2",
+    "node-fetch": "^2.6.11",
+    "nodemailer": "^6.9.3",
+    "pg": "^8.11.0",
+    "pg-promise": "^11.5.0",
+    "redis": "^4.0.6",
+    "winston": "^3.9.0"
+  }
+}
