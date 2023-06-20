@@ -1,6 +1,6 @@
 const { DbClient } = require('./DbManager/dbHandler.js');
 const { CacheService } = require('./CacheManager/cacheService.js');
-const { sendEmailConfirmationMessage } = require('./MessagingService/emailProducer.js');
+const { sendEmailConfirmationMessage } = require('./MessagingService/emailMessenger.js');
 const { processOrderSchema, sendConfirmationSchema } = require('./Schema/schema.js');
 const fetch = require("node-fetch");
 const { logger } = require('./LogManager/logger.js'); // Import the logger module
@@ -60,16 +60,22 @@ async function processOrder(payload, h) {
     await dbClient.processOrder(payload);
     logger.info(payload); // Use the logger to log messages
     await cacheService.updateProductCache(payload.products);
-    await fetch("http://localhost:4200/sendConfirmationEmail", {
-      method: "POST",
-      body: JSON.stringify({
-        email: payload.shippingDetails.Email,
-        firstName: payload.shippingDetails.Name
-      }),
-      headers: {
-        "Content-type": "application/json; charset=UTF-8"
-      }
+
+    sendEmailConfirmation({
+        email:payload.shippingDetails.Email,
+        firstName:payload.shippingDetails.Name
     });
+
+    // await fetch("http://localhost:4200/sendConfirmationEmail", {
+    //   method: "POST",
+    //   body: JSON.stringify({
+    //     email: payload.shippingDetails.Email,
+    //     firstName: payload.shippingDetails.Name
+    //   }),
+    //   headers: {
+    //     "Content-type": "application/json; charset=UTF-8"
+    //   }
+    // });
     return h.response('ok').code(200);
   } catch (err) {
     logger.error(err); // Log the error using the logger
@@ -111,7 +117,7 @@ function sendEmailConfirmation(payload, h) {
     if (sendConfirmationError)
       throw (sendConfirmationError);
     sendEmailConfirmationMessage(payload);
-    return h.response('ok').code(200);
+    // return h.response('ok').code(200);
   } catch (err) {
     logger.error(err); // Log the error using the logger
     throw err; 

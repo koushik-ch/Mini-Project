@@ -1,6 +1,6 @@
 const {Client} = require('pg');
 const { logger, errorLogger } = require('../LogManager/logger.js');
-
+const { TransactionManager } = require('../TransactionManager/txManager.js');
 class DbClient{
     constructor(){
         this.client = new Client({
@@ -10,6 +10,7 @@ class DbClient{
             password:'1234',
             port:5432,
         })
+        this.transactionManager = new TransactionManager();
     }
     async connect(){
         await this.client.connect();
@@ -44,21 +45,31 @@ class DbClient{
 
     async processOrder(orderDetails){
         try{
-            await this.client.query('BEGIN')
-            await this.client.query(`INSERT INTO orders(order_details) VALUES('${JSON.stringify(orderDetails)}')`);
-            for(let product of orderDetails.products){
-                let details = await this.client.query(`SELECT product_details FROM products WHERE p_id ='${product.p_id}'`);
-                details = details.rows[0]
-                const availableStock = details.product_details.availableStock-product.quantity;
-                console.log(availableStock);
-                details.product_details.availableStock = availableStock;
-                await this.client.query(`UPDATE products SET product_details = '${JSON.stringify(details.product_details)}' WHERE p_id ='${product.p_id}'`);
-            }
-            await this.client.query('COMMIT')
+            await this.transactionManager.transact(this.client,async()=>{
+                await this.client.query(`INSERT INTO orders(order_details) VALUES('${JSON.stringify(orderDetails)}')`);
+                for(let product of orderDetails.products){
+                    let details = await this.client.query(`SELECT product_details FROM products WHERE p_id ='${product.p_id}'`);
+                    details = details.rows[0]
+                    const availableStock = details.product_details.availableStock-product.quantity;
+                    console.log(availableStock);
+                    details.product_details.availableStock = availableStock;
+                    await this.client.query(`UPDATE products SET product_details = '${JSON.stringify(details.product_details)}' WHERE p_id ='${product.p_id}'`);
+                }
+            })
+            // await this.client.query('BEGIN')
+            // await this.client.query(`INSERT INTO orders(order_details) VALUES('${JSON.stringify(orderDetails)}')`);
+            // for(let product of orderDetails.products){
+            //     let details = await this.client.query(`SELECT product_details FROM products WHERE p_id ='${product.p_id}'`);
+            //     details = details.rows[0]
+            //     const availableStock = details.product_details.availableStock-product.quantity;
+            //     console.log(availableStock);
+            //     details.product_details.availableStock = availableStock;
+            //     await this.client.query(`UPDATE products SET product_details = '${JSON.stringify(details.product_details)}' WHERE p_id ='${product.p_id}'`);
+            // }
+            // await this.client.query('COMMIT')
         }
         catch(err){
             logger.error(err);
-            await this.client.query('ROLLBACK')
             throw err; 
         }
 

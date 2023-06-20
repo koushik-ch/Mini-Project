@@ -1,6 +1,6 @@
 const amqp = require('amqplib')
 const nodemailer = require('nodemailer');
-const { sendEmailConfirmation } = require('../Api/MessagingService/emailProducer');
+const { sendEmailConfirmation } = require('../Api/MessagingService/emailMessenger');
 
 async function consumeEmailConfirmations(){
     const connection = await amqp.connect("amqp://localhost:5672");
